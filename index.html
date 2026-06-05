@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Investment Analyzer — Technical analysis dashboard with Investment Score for Crypto, Stocks, and Commodities. RSI, MACD, Moving Averages, Bollinger Bands analysis.">
+  <meta name="keywords" content="investment, analyzer, bitcoin, crypto, stocks, technical analysis, RSI, MACD, trading">
+  <meta name="author" content="TOPSIRA">
+
+  <title>Investment Analyzer — Technical Analysis Dashboard</title>
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="app" id="app">
+
+    <!-- ════════ HEADER ════════ -->
+    <header class="header" id="header">
+      <div class="header__brand">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <img src="assets/favicon.svg" alt="Logo" class="header__logo">
+        <h1 class="header__title">Investment Analyzer</h1>
+      </div>
+      <div class="header__actions">
+        <span class="header__updated" id="last-updated"></span>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+          <span class="theme-toggle__icon theme-toggle__icon--moon">🌙</span>
+          <span class="theme-toggle__icon theme-toggle__icon--sun">☀️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ════════ SIDEBAR ════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__header">
+        <div class="sidebar__title">Watchlist</div>
+        <div class="search-box">
+          <span class="search-box__icon">🔍</span>
+          <input
+            type="text"
+            class="search-box__input"
+            id="search-input"
+            placeholder="Search assets..."
+            autocomplete="off"
+          >
+          <div class="search-results" id="search-results"></div>
+        </div>
+      </div>
+      <div class="watchlist" id="watchlist"></div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ════════ MAIN CONTENT ════════ -->
+    <main class="main" id="main-content">
+
+      <!-- Asset Header -->
+      <div class="asset-header" id="asset-header">
+        <div class="asset-header__info">
+          <span class="asset-header__symbol" id="asset-symbol">—</span>
+          <span class="asset-header__name" id="asset-name">Select an asset</span>
+        </div>
+        <div class="asset-header__price-group">
+          <span class="asset-header__price" id="asset-price">—</span>
+          <span class="asset-header__change" id="asset-change">—</span>
+        </div>
+      </div>
+
+      <!-- Timeframe Bar -->
+      <div class="timeframe-bar" id="timeframe-bar">
+        <span class="timeframe-bar__label">Period</span>
+        <button class="timeframe-btn" data-tf="1D">1D</button>
+        <button class="timeframe-btn" data-tf="7D">7D</button>
+        <button class="timeframe-btn active" data-tf="1M">1M</button>
+        <button class="timeframe-btn" data-tf="3M">3M</button>
+        <button class="timeframe-btn" data-tf="6M">6M</button>
+        <button class="timeframe-btn" data-tf="1Y">1Y</button>
+      </div>
+
+      <!-- Chart + Analysis Section (Scrollable) -->
+      <section class="chart-section" id="chart-section">
+
+        <!-- Main Candlestick Chart -->
+        <div class="chart-container" id="chart-card">
+          <div class="chart-container__title">Price Chart</div>
+          <div id="main-chart"></div>
+          <div class="loading-overlay" id="chart-loading">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+
+        <!-- Volume Chart -->
+        <div class="chart-container" style="min-height: 130px;">
+          <div class="chart-container__title">Volume</div>
+          <div id="volume-chart"></div>
+        </div>
+
+        <!-- Analysis Panels -->
+        <div class="analysis-grid" id="analysis-grid">
+
+          <!-- Investment Score Card -->
+          <div class="score-card" id="score-card">
+            <span class="score-card__label">Investment Score</span>
+            <div class="score-gauge">
+              <svg class="score-gauge__svg" viewBox="0 0 120 120">
+                <circle class="score-gauge__track" cx="60" cy="60" r="52" />
+                <circle class="score-gauge__fill" id="score-fill" cx="60" cy="60" r="52"
+                  stroke-dasharray="326.73"
+                  stroke-dashoffset="326.73" />
+              </svg>
+              <span class="score-gauge__value" id="score-value">—</span>
+            </div>
+            <span class="score-card__signal" id="score-signal" data-signal="hold">—</span>
+            <span class="score-card__detail" id="score-detail">Analyzing...</span>
+          </div>
+
+          <!-- RSI Card -->
+          <div class="indicator-card" id="rsi-card">
+            <div class="indicator-card__header">
+              <span class="indicator-card__name">RSI (14)</span>
+              <span class="indicator-card__signal neutral" id="rsi-signal">—</span>
+            </div>
+            <span class="indicator-card__value" id="rsi-value">—</span>
+            <span class="indicator-card__detail" id="rsi-detail">Relative Strength Index</span>
+            <div class="indicator-card__bar">
+              <div class="indicator-card__bar-fill" id="rsi-bar" style="width: 50%; background: var(--color-hold);"></div>
+            </div>
+          </div>
+
+          <!-- MACD Card -->
+          <div class="indicator-card" id="macd-card">
+            <div class="indicator-card__header">
+              <span class="indicator-card__name">MACD</span>
+              <span class="indicator-card__signal neutral" id="macd-signal">—</span>
+            </div>
+            <span class="indicator-card__value" id="macd-value">—</span>
+            <span class="indicator-card__detail" id="macd-detail">Moving Average Convergence Divergence</span>
+            <div class="indicator-card__bar">
+              <div class="indicator-card__bar-fill" id="macd-bar" style="width: 50%; background: var(--color-hold);"></div>
+            </div>
+          </div>
+
+          <!-- Moving Averages Card -->
+          <div class="indicator-card" id="ma-card">
+            <div class="indicator-card__header">
+              <span class="indicator-card__name">MA Trend</span>
+              <span class="indicator-card__signal neutral" id="ma-signal">—</span>
+            </div>
+            <span class="indicator-card__value" id="ma-value">—</span>
+            <span class="indicator-card__detail" id="ma-detail">SMA 20 / 50 / 200</span>
+            <div class="indicator-card__bar">
+              <div class="indicator-card__bar-fill" id="ma-bar" style="width: 50%; background: var(--color-hold);"></div>
+            </div>
+          </div>
+
+          <!-- Bollinger Bands Card -->
+          <div class="indicator-card" id="bb-card">
+            <div class="indicator-card__header">
+              <span class="indicator-card__name">Bollinger</span>
+              <span class="indicator-card__signal neutral" id="bb-signal">—</span>
+            </div>
+            <span class="indicator-card__value" id="bb-value">—</span>
+            <span class="indicator-card__detail" id="bb-detail">Bollinger Bands (20, 2)</span>
+            <div class="indicator-card__bar">
+              <div class="indicator-card__bar-fill" id="bb-bar" style="width: 50%; background: var(--color-hold);"></div>
+            </div>
+          </div>
+
+          <!-- Volume Card -->
+          <div class="indicator-card" id="vol-card">
+            <div class="indicator-card__header">
+              <span class="indicator-card__name">Volume</span>
+              <span class="indicator-card__signal neutral" id="vol-signal">—</span>
+            </div>
+            <span class="indicator-card__value" id="vol-value">—</span>
+            <span class="indicator-card__detail" id="vol-detail">Volume vs 20-day average</span>
+            <div class="indicator-card__bar">
+              <div class="indicator-card__bar-fill" id="vol-bar" style="width: 50%; background: var(--color-hold);"></div>
+            </div>
+          </div>
+
+        </div><!-- /analysis-grid -->
+
+      </section><!-- /chart-section -->
+
+      <!-- Footer -->
+      <footer class="footer">
+        <span class="footer__text">Data: CoinGecko · Yahoo Finance · Charts: TradingView Lightweight Charts</span>
+        <span class="footer__disclaimer">⚠️ For informational purposes only. Not financial advice. Always do your own research.</span>
+      </footer>
+
+    </main>
+
+  </div><!-- /app -->
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ════════ SCRIPTS ════════ -->
+  <!-- TradingView Lightweight Charts v4 -->
+  <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+
+  <!-- App Modules (order matters: dependencies first) -->
+  <script src="js/theme.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/indicators.js"></script>
+  <script src="js/score.js"></script>
+  <script src="js/watchlist.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
