@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Investment Analyzer — Technical analysis dashboard with Investment Score for Crypto, Stocks, and Commodities. RSI, MACD, Moving Averages, Bollinger Bands analysis.">
-  <meta name="keywords" content="investment, analyzer, bitcoin, crypto, stocks, technical analysis, RSI, MACD, trading">
+  <meta name="description" content="PortPro-style Investment Portfolio Manager & Analyzer. Track holdings, analyze markets, manage transactions, view performance analytics, and run technical analysis.">
+  <meta name="keywords" content="investment, portfolio manager, bitcoin, crypto, stocks, technical analysis, RSI, MACD, tracker, portpro">
   <meta name="author" content="TOPSIRA">
 
-  <title>Investment Analyzer — Technical Analysis Dashboard</title>
+  <title>PortPro — Professional Investment & Portfolio Manager</title>
 
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/styles.css">
@@ -19,9 +19,8 @@
     <!-- ════════ HEADER ════════ -->
     <header class="header" id="header">
       <div class="header__brand">
-        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
         <img src="assets/favicon.svg" alt="Logo" class="header__logo">
-        <h1 class="header__title">Investment Analyzer</h1>
+        <h1 class="header__title">PortPro</h1>
       </div>
       <div class="header__actions">
         <span class="header__updated" id="last-updated"></span>
@@ -32,172 +31,715 @@
       </div>
     </header>
 
-    <!-- ════════ SIDEBAR ════════ -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar__header">
-        <div class="sidebar__title">Watchlist</div>
-        <div class="search-box">
-          <span class="search-box__icon">🔍</span>
-          <input
-            type="text"
-            class="search-box__input"
-            id="search-input"
-            placeholder="Search assets..."
-            autocomplete="off"
-          >
-          <div class="search-results" id="search-results"></div>
-        </div>
-      </div>
-      <div class="watchlist" id="watchlist"></div>
-    </aside>
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-    <!-- ════════ MAIN CONTENT ════════ -->
+    <!-- ════════ MAIN CONTENT / VIEW CONTAINER ════════ -->
     <main class="main" id="main-content">
 
-      <!-- Asset Header -->
-      <div class="asset-header" id="asset-header">
-        <div class="asset-header__info">
-          <span class="asset-header__symbol" id="asset-symbol">—</span>
-          <span class="asset-header__name" id="asset-name">Select an asset</span>
+      <!-- ─── DASHBOARD TAB ─── -->
+      <section id="dashboard-tab" class="view active">
+        <div class="page-header">
+          <h2 class="page-title">Dashboard</h2>
         </div>
-        <div class="asset-header__price-group">
-          <span class="asset-header__price" id="asset-price">—</span>
-          <span class="asset-header__change" id="asset-change">—</span>
-        </div>
-      </div>
 
-      <!-- Timeframe Bar -->
-      <div class="timeframe-bar" id="timeframe-bar">
-        <span class="timeframe-bar__label">Period</span>
-        <button class="timeframe-btn" data-tf="1D">1D</button>
-        <button class="timeframe-btn" data-tf="7D">7D</button>
-        <button class="timeframe-btn active" data-tf="1M">1M</button>
-        <button class="timeframe-btn" data-tf="3M">3M</button>
-        <button class="timeframe-btn" data-tf="6M">6M</button>
-        <button class="timeframe-btn" data-tf="1Y">1Y</button>
-      </div>
-
-      <!-- Chart + Analysis Section (Scrollable) -->
-      <section class="chart-section" id="chart-section">
-
-        <!-- Main Candlestick Chart -->
-        <div class="chart-container" id="chart-card">
-          <div class="chart-container__title">Price Chart</div>
-          <div id="main-chart"></div>
-          <div class="loading-overlay" id="chart-loading">
-            <div class="loading-spinner"></div>
+        <!-- Summary Stat Cards -->
+        <div class="dashboard-grid">
+          <div class="stat-card">
+            <span class="stat-card__label">Portfolio Value</span>
+            <span class="stat-card__value" id="db-total-value">$0.00</span>
+            <div class="stat-card__change" id="db-value-change">—</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Total Profit / Loss</span>
+            <span class="stat-card__value" id="db-total-pnl">$0.00</span>
+            <div class="stat-card__change" id="db-pnl-pct">—</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Best Performer</span>
+            <span class="stat-card__value" id="db-best-performer">—</span>
+            <div class="stat-card__change positive" id="db-best-perf-change">—</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Active Assets</span>
+            <span class="stat-card__value" id="db-assets-count">0</span>
+            <div class="stat-card__change text-muted" id="db-holdings-ratio">Allocated</div>
           </div>
         </div>
 
-        <!-- Volume Chart -->
-        <div class="chart-container" style="min-height: 130px;">
-          <div class="chart-container__title">Volume</div>
-          <div id="volume-chart"></div>
+        <!-- Charts Row -->
+        <div class="dashboard-charts-grid">
+          <div class="card">
+            <h3 class="card__title">Asset Allocation</h3>
+            <div class="chart-canvas-wrapper">
+              <canvas id="db-allocation-chart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card__title">Growth Performance (Cost Basis)</h3>
+            <div class="chart-canvas-wrapper">
+              <canvas id="db-growth-chart"></canvas>
+            </div>
+          </div>
         </div>
 
-        <!-- Analysis Panels -->
-        <div class="analysis-grid" id="analysis-grid">
+        <!-- Table Row (Holdings & Recent Activity) -->
+        <div class="dashboard-sections-grid">
+          <div class="card">
+            <h3 class="card__title">Top Holdings</h3>
+            <div class="data-table-container">
+              <table class="data-table" id="db-holdings-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Qty</th>
+                    <th>Avg Cost</th>
+                    <th>Current Price</th>
+                    <th>Value</th>
+                    <th>P/L</th>
+                    <th>Weight</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-secondary);">No holdings. Add transactions to see summary.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-          <!-- Investment Score Card -->
-          <div class="score-card" id="score-card">
-            <span class="score-card__label">Investment Score</span>
-            <div class="score-gauge">
+          <div class="card">
+            <h3 class="card__title">Recent Transactions</h3>
+            <div class="data-table-container">
+              <table class="data-table" id="db-recent-tx-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Symbol</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">No recent activity.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── ANALYSIS TAB ─── -->
+      <section id="analysis-tab" class="view">
+        <!-- Watchlist + Search bar specific to Technical Analysis view -->
+        <div class="analysis-watchlist-container">
+          <div class="analysis-watchlist-scroll">
+            <div class="watchlist-horizontal" id="watchlist"></div>
+          </div>
+          <div class="analysis-search-wrapper">
+            <div class="search-box">
+              <span class="search-box__icon">🔍</span>
+              <input
+                type="text"
+                class="search-box__input"
+                id="search-input"
+                placeholder="Search asset..."
+                autocomplete="off"
+              >
+              <div class="search-results" id="search-results"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Asset Header -->
+        <div class="asset-header" id="asset-header">
+          <div class="asset-header__info">
+            <span class="asset-header__symbol" id="asset-symbol">—</span>
+            <span class="asset-header__name" id="asset-name">Select an asset</span>
+          </div>
+          <div class="asset-header__price-group">
+            <span class="asset-header__price" id="asset-price">—</span>
+            <span class="asset-header__change" id="asset-change">—</span>
+          </div>
+        </div>
+
+        <!-- Timeframe Bar -->
+        <div class="timeframe-bar" id="timeframe-bar">
+          <span class="timeframe-bar__label">Period</span>
+          <button class="timeframe-btn" data-tf="1D">1D</button>
+          <button class="timeframe-btn" data-tf="7D">7D</button>
+          <button class="timeframe-btn active" data-tf="1M">1M</button>
+          <button class="timeframe-btn" data-tf="3M">3M</button>
+          <button class="timeframe-btn" data-tf="6M">6M</button>
+          <button class="timeframe-btn" data-tf="1Y">1Y</button>
+        </div>
+
+        <!-- Chart + Analysis Section (Scrollable) -->
+        <section class="chart-section" id="chart-section">
+          <!-- Main Candlestick Chart -->
+          <div class="chart-container" id="chart-card">
+            <div class="chart-container__title">Price Chart</div>
+            <div id="main-chart"></div>
+            <div class="loading-overlay" id="chart-loading">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+
+          <!-- Volume Chart -->
+          <div class="chart-container" style="min-height: 130px;">
+            <div class="chart-container__title">Volume</div>
+            <div id="volume-chart"></div>
+          </div>
+
+          <!-- Analysis Panels -->
+          <div class="analysis-grid" id="analysis-grid">
+            <!-- Investment Score Card -->
+            <div class="score-card" id="score-card">
+              <span class="score-card__label">Investment Score</span>
+              <div class="score-gauge">
+                <svg class="score-gauge__svg" viewBox="0 0 120 120">
+                  <circle class="score-gauge__track" cx="60" cy="60" r="52" />
+                  <circle class="score-gauge__fill" id="score-fill" cx="60" cy="60" r="52"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="326.73" />
+                </svg>
+                <span class="score-gauge__value" id="score-value">—</span>
+              </div>
+              <span class="score-card__signal" id="score-signal" data-signal="hold">—</span>
+              <span class="score-card__detail" id="score-detail">Analyzing...</span>
+            </div>
+
+            <!-- RSI Card -->
+            <div class="indicator-card" id="rsi-card">
+              <div class="indicator-card__header">
+                <span class="indicator-card__name">RSI (14)</span>
+                <span class="indicator-card__signal neutral" id="rsi-signal">—</span>
+              </div>
+              <span class="indicator-card__value" id="rsi-value">—</span>
+              <span class="indicator-card__detail" id="rsi-detail">Relative Strength Index</span>
+              <div class="indicator-card__bar">
+                <div class="indicator-card__bar-fill" id="rsi-bar" style="width: 50%; background: var(--color-hold);"></div>
+              </div>
+            </div>
+
+            <!-- MACD Card -->
+            <div class="indicator-card" id="macd-card">
+              <div class="indicator-card__header">
+                <span class="indicator-card__name">MACD</span>
+                <span class="indicator-card__signal neutral" id="macd-signal">—</span>
+              </div>
+              <span class="indicator-card__value" id="macd-value">—</span>
+              <span class="indicator-card__detail" id="macd-detail">Moving Average Convergence Divergence</span>
+              <div class="indicator-card__bar">
+                <div class="indicator-card__bar-fill" id="macd-bar" style="width: 50%; background: var(--color-hold);"></div>
+              </div>
+            </div>
+
+            <!-- Moving Averages Card -->
+            <div class="indicator-card" id="ma-card">
+              <div class="indicator-card__header">
+                <span class="indicator-card__name">MA Trend</span>
+                <span class="indicator-card__signal neutral" id="ma-signal">—</span>
+              </div>
+              <span class="indicator-card__value" id="ma-value">—</span>
+              <span class="indicator-card__detail" id="ma-detail">SMA 20 / 50 / 200</span>
+              <div class="indicator-card__bar">
+                <div class="indicator-card__bar-fill" id="ma-bar" style="width: 50%; background: var(--color-hold);"></div>
+              </div>
+            </div>
+
+            <!-- Bollinger Bands Card -->
+            <div class="indicator-card" id="bb-card">
+              <div class="indicator-card__header">
+                <span class="indicator-card__name">Bollinger</span>
+                <span class="indicator-card__signal neutral" id="bb-signal">—</span>
+              </div>
+              <span class="indicator-card__value" id="bb-value">—</span>
+              <span class="indicator-card__detail" id="bb-detail">Bollinger Bands (20, 2)</span>
+              <div class="indicator-card__bar">
+                <div class="indicator-card__bar-fill" id="bb-bar" style="width: 50%; background: var(--color-hold);"></div>
+              </div>
+            </div>
+
+            <!-- Volume Card -->
+            <div class="indicator-card" id="vol-card">
+              <div class="indicator-card__header">
+                <span class="indicator-card__name">Volume</span>
+                <span class="indicator-card__signal neutral" id="vol-signal">—</span>
+              </div>
+              <span class="indicator-card__value" id="vol-value">—</span>
+              <span class="indicator-card__detail" id="vol-detail">Volume vs 20-day average</span>
+              <div class="indicator-card__bar">
+                <div class="indicator-card__bar-fill" id="vol-bar" style="width: 50%; background: var(--color-hold);"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer inside Analysis view -->
+        <footer class="footer">
+          <span class="footer__text">Data: CoinGecko · Yahoo Finance · Charts: TradingView Lightweight Charts</span>
+          <span class="footer__disclaimer">⚠️ For informational purposes only. Not financial advice. Always do your own research.</span>
+        </footer>
+      </section>
+
+      <!-- ─── MARKETS TAB ─── -->
+      <section id="markets-tab" class="view">
+        <div class="page-header">
+          <h2 class="page-title">Market Overview</h2>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="pill-tabs" id="markets-category-tabs">
+          <span class="pill-tab active" data-category="all">All Assets</span>
+          <span class="pill-tab" data-category="crypto">Crypto</span>
+          <span class="pill-tab" data-category="stock">US Stocks</span>
+          <span class="pill-tab" data-category="stock-th">Thai Stocks</span>
+          <span class="pill-tab" data-category="commodity">Commodities</span>
+        </div>
+
+        <!-- Top Movers -->
+        <div class="dashboard-charts-grid" style="margin-bottom: var(--space-lg); grid-template-columns: 1fr 1fr;">
+          <div class="card">
+            <h3 class="card__title" style="color: var(--color-bullish);">🔥 Top Gainers (24h)</h3>
+            <div class="data-table-container">
+              <table class="data-table" id="markets-gainers-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>24h Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card__title" style="color: var(--color-bearish);">❄️ Top Losers (24h)</h3>
+            <div class="data-table-container">
+              <table class="data-table" id="markets-losers-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>24h Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Markets Table -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); flex-wrap: wrap; gap: var(--space-md);">
+            <h3 class="card__title" style="margin-bottom: 0;">Market Prices</h3>
+            <div class="search-box" style="width: 250px;">
+              <span class="search-box__icon">🔍</span>
+              <input type="text" class="search-box__input" id="markets-search" placeholder="Filter markets...">
+            </div>
+          </div>
+          <div class="data-table-container">
+            <table class="data-table" id="markets-table">
+              <thead>
+                <tr>
+                  <th data-sort="symbol">Symbol ↕</th>
+                  <th data-sort="name">Name ↕</th>
+                  <th data-sort="price">Price ↕</th>
+                  <th data-sort="change">24h Change ↕</th>
+                  <th data-sort="type">Category ↕</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-secondary);">Loading market prices...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── TRANSACTIONS TAB ─── -->
+      <section id="transactions-tab" class="view">
+        <div class="page-header">
+          <h2 class="page-title">Transactions</h2>
+          <button class="btn btn--primary" id="btn-add-transaction">➕ Add Transaction</button>
+        </div>
+
+        <!-- Transactions Summary -->
+        <div class="dashboard-grid" style="margin-bottom: var(--space-lg); grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+          <div class="stat-card">
+            <span class="stat-card__label">Transactions</span>
+            <span class="stat-card__value" id="tx-count">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Total Invested</span>
+            <span class="stat-card__value" id="tx-total-invested">$0.00</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Current Value</span>
+            <span class="stat-card__value" id="tx-current-value">$0.00</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Total Profit / Loss</span>
+            <span class="stat-card__value" id="tx-net-pnl">$0.00</span>
+          </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="card" style="padding: var(--space-md); margin-bottom: var(--space-lg);">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap: var(--space-md); flex-wrap: wrap;">
+            <div style="display:flex; gap: var(--space-md); align-items:center; flex-wrap: wrap;">
+              <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Filters:</span>
+              <select class="form-control" id="tx-filter-symbol" style="width:140px; padding:6px 12px; font-size:0.85rem;">
+                <option value="all">All Assets</option>
+              </select>
+              <select class="form-control" id="tx-filter-type" style="width:120px; padding:6px 12px; font-size:0.85rem;">
+                <option value="all">All Types</option>
+                <option value="buy">Buys</option>
+                <option value="sell">Sells</option>
+              </select>
+            </div>
+            <div>
+              <button class="btn btn--secondary" id="btn-clear-tx-filters" style="padding: 6px 12px; font-size:0.82rem;">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transactions List -->
+        <div class="card">
+          <h3 class="card__title">Activity History</h3>
+          <div class="data-table-container">
+            <table class="data-table" id="transactions-table-list">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Symbol</th>
+                  <th>Qty</th>
+                  <th>Tx Price</th>
+                  <th>Current Price</th>
+                  <th>Total Cost / Rev</th>
+                  <th>Unrealized P/L</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="9" style="text-align: center; color: var(--text-secondary);">No transaction history. Click 'Add Transaction' to begin tracking.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── PORTFOLIO ANALYTICS TAB ─── -->
+      <section id="analytics-tab" class="view">
+        <div class="page-header">
+          <h2 class="page-title">Portfolio Analytics</h2>
+        </div>
+
+        <!-- Diversification Score + Weightings -->
+        <div class="dashboard-charts-grid" style="grid-template-columns: 1fr 1.3fr;">
+          <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+            <h3 class="card__title" style="align-self:flex-start;">Diversification Score</h3>
+            <div class="score-gauge" style="margin-top:var(--space-md); margin-bottom:var(--space-md); width:150px; height:150px;">
               <svg class="score-gauge__svg" viewBox="0 0 120 120">
                 <circle class="score-gauge__track" cx="60" cy="60" r="52" />
-                <circle class="score-gauge__fill" id="score-fill" cx="60" cy="60" r="52"
+                <circle class="score-gauge__fill" id="analytics-div-fill" cx="60" cy="60" r="52"
                   stroke-dasharray="326.73"
                   stroke-dashoffset="326.73" />
               </svg>
-              <span class="score-gauge__value" id="score-value">—</span>
+              <span class="score-gauge__value" id="analytics-div-val">—</span>
             </div>
-            <span class="score-card__signal" id="score-signal" data-signal="hold">—</span>
-            <span class="score-card__detail" id="score-detail">Analyzing...</span>
+            <div class="score-card__signal" id="analytics-div-label" style="font-size:0.95rem; font-weight:700;">Holdings Spread</div>
+            <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:var(--space-sm); max-width:280px;" id="analytics-div-desc">
+              Based on the Herfindahl-Hirschman Index (HHI). Higher means safer diversification.
+            </p>
           </div>
 
-          <!-- RSI Card -->
-          <div class="indicator-card" id="rsi-card">
-            <div class="indicator-card__header">
-              <span class="indicator-card__name">RSI (14)</span>
-              <span class="indicator-card__signal neutral" id="rsi-signal">—</span>
+          <div class="card">
+            <h3 class="card__title">Realized vs. Unrealized Profit / Loss</h3>
+            <div class="chart-canvas-wrapper" style="height: 250px;">
+              <canvas id="analytics-pnl-comparison-chart"></canvas>
             </div>
-            <span class="indicator-card__value" id="rsi-value">—</span>
-            <span class="indicator-card__detail" id="rsi-detail">Relative Strength Index</span>
-            <div class="indicator-card__bar">
-              <div class="indicator-card__bar-fill" id="rsi-bar" style="width: 50%; background: var(--color-hold);"></div>
+          </div>
+        </div>
+
+        <!-- Weighting stack -->
+        <div class="card" style="margin-bottom:var(--space-lg);">
+          <h3 class="card__title">Holdings Weight Visualizer</h3>
+          <div id="holdings-bar-visualizer" style="height:32px; border-radius:var(--radius-sm); overflow:hidden; display:flex; background:var(--bg-input); margin-bottom:var(--space-md);">
+            <!-- Populated dynamically -->
+          </div>
+          <div id="holdings-bar-legend" style="display:flex; flex-wrap:wrap; gap:var(--space-lg); justify-content:center; font-size:0.82rem;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Detailed Analytics Table -->
+        <div class="card">
+          <h3 class="card__title">Holdings Details</h3>
+          <div class="data-table-container">
+            <table class="data-table" id="analytics-holdings-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Category</th>
+                  <th>Quantity</th>
+                  <th>Avg Buy Price</th>
+                  <th>Current Price</th>
+                  <th>Market Value</th>
+                  <th>Weight %</th>
+                  <th>Realized P/L</th>
+                  <th>Unrealized P/L</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="9" style="text-align: center; color: var(--text-secondary);">No assets currently held.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── SETTINGS TAB ─── -->
+      <section id="settings-tab" class="view">
+        <div class="page-header">
+          <h2 class="page-title">Settings</h2>
+        </div>
+
+        <div class="settings-section">
+
+          <!-- General settings -->
+          <div class="card settings-group">
+            <h3 class="settings-group__title">Preferences</h3>
+
+            <div class="settings-row">
+              <div class="settings-row__info">
+                <span class="settings-row__title">Visual Theme</span>
+                <span class="settings-row__desc">Switch between dark and light modes</span>
+              </div>
+              <div>
+                <button class="btn btn--secondary" id="settings-theme-toggle" style="padding: 6px 12px; font-size:0.85rem;">Toggle Theme</button>
+              </div>
             </div>
           </div>
 
-          <!-- MACD Card -->
-          <div class="indicator-card" id="macd-card">
-            <div class="indicator-card__header">
-              <span class="indicator-card__name">MACD</span>
-              <span class="indicator-card__signal neutral" id="macd-signal">—</span>
+          <!-- Data Source Settings -->
+          <div class="card settings-group">
+            <h3 class="settings-group__title">Storage & Sync</h3>
+
+            <div class="form-group" style="margin-bottom: var(--space-xl);">
+              <label>Database Mode</label>
+              <div class="btn-toggle-group" id="settings-mode-group">
+                <button type="button" class="btn-toggle active" data-mode="local">Local Browser Storage</button>
+                <button type="button" class="btn-toggle" data-mode="sheets">Google Sheets Sync</button>
+              </div>
             </div>
-            <span class="indicator-card__value" id="macd-value">—</span>
-            <span class="indicator-card__detail" id="macd-detail">Moving Average Convergence Divergence</span>
-            <div class="indicator-card__bar">
-              <div class="indicator-card__bar-fill" id="macd-bar" style="width: 50%; background: var(--color-hold);"></div>
+
+            <!-- Sheets configuration -->
+            <div id="sheets-config-area" style="display:none; border-top:1px solid var(--border-color); padding-top:var(--space-lg);">
+              <div class="form-group">
+                <label for="settings-sheets-url">Google Apps Script Web App URL</label>
+                <input type="url" class="form-control" id="settings-sheets-url" placeholder="https://script.google.com/macros/s/.../exec">
+                <span class="settings-row__desc" style="margin-top:4px; display:block;">Web App URL deployed from your Apps Script.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="settings-sheets-key">Access Key / Password</label>
+                <input type="password" class="form-control" id="settings-sheets-key" placeholder="Enter matching ACCESS_KEY from sheet config">
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-md); margin-top:var(--space-xl);">
+                <div class="settings-row__info">
+                  <button type="button" class="btn btn--primary" id="btn-sync-sheets">🔄 Sync with Google Sheet</button>
+                  <div class="connection-status" id="sheets-conn-status">Disconnected</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Moving Averages Card -->
-          <div class="indicator-card" id="ma-card">
-            <div class="indicator-card__header">
-              <span class="indicator-card__name">MA Trend</span>
-              <span class="indicator-card__signal neutral" id="ma-signal">—</span>
+          <!-- Import / Export -->
+          <div class="card settings-group">
+            <h3 class="settings-group__title">Backup & Portability</h3>
+
+            <div class="settings-row">
+              <div class="settings-row__info">
+                <span class="settings-row__title">Export Data</span>
+                <span class="settings-row__desc">Download all transactions and settings as a JSON file</span>
+              </div>
+              <div>
+                <button class="btn btn--secondary" id="btn-export-data">📤 Export Backup</button>
+              </div>
             </div>
-            <span class="indicator-card__value" id="ma-value">—</span>
-            <span class="indicator-card__detail" id="ma-detail">SMA 20 / 50 / 200</span>
-            <div class="indicator-card__bar">
-              <div class="indicator-card__bar-fill" id="ma-bar" style="width: 50%; background: var(--color-hold);"></div>
+
+            <div class="settings-row">
+              <div class="settings-row__info">
+                <span class="settings-row__title">Import Data</span>
+                <span class="settings-row__desc">Restore your data from a JSON backup file (will overwrite current database)</span>
+              </div>
+              <div>
+                <input type="file" id="import-file-input" accept=".json" style="display:none;">
+                <button class="btn btn--secondary" id="btn-import-data">📥 Import Backup</button>
+              </div>
             </div>
           </div>
 
-          <!-- Bollinger Bands Card -->
-          <div class="indicator-card" id="bb-card">
-            <div class="indicator-card__header">
-              <span class="indicator-card__name">Bollinger</span>
-              <span class="indicator-card__signal neutral" id="bb-signal">—</span>
-            </div>
-            <span class="indicator-card__value" id="bb-value">—</span>
-            <span class="indicator-card__detail" id="bb-detail">Bollinger Bands (20, 2)</span>
-            <div class="indicator-card__bar">
-              <div class="indicator-card__bar-fill" id="bb-bar" style="width: 50%; background: var(--color-hold);"></div>
-            </div>
-          </div>
+          <!-- Danger Zone -->
+          <div class="card settings-group" style="border-color: rgba(255, 23, 68, 0.4);">
+            <h3 class="settings-group__title" style="color: var(--color-bearish);">⚠️ Danger Zone</h3>
 
-          <!-- Volume Card -->
-          <div class="indicator-card" id="vol-card">
-            <div class="indicator-card__header">
-              <span class="indicator-card__name">Volume</span>
-              <span class="indicator-card__signal neutral" id="vol-signal">—</span>
-            </div>
-            <span class="indicator-card__value" id="vol-value">—</span>
-            <span class="indicator-card__detail" id="vol-detail">Volume vs 20-day average</span>
-            <div class="indicator-card__bar">
-              <div class="indicator-card__bar-fill" id="vol-bar" style="width: 50%; background: var(--color-hold);"></div>
+            <div class="settings-row">
+              <div class="settings-row__info">
+                <span class="settings-row__title" style="color: var(--color-bearish);">Reset All Database</span>
+                <span class="settings-row__desc">Permanently wipe all transaction logs and snapshots. This cannot be undone.</span>
+              </div>
+              <div>
+                <button class="btn btn--danger" id="btn-clear-db">☠️ Reset Data</button>
+              </div>
             </div>
           </div>
 
-        </div><!-- /analysis-grid -->
+          <!-- About / Apps Script Setup Details -->
+          <div class="card" style="padding:var(--space-xl);">
+            <h3 class="card__title">Apps Script Integration Guide</h3>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:var(--space-md); line-height:1.6;">
+              To sync your data with Google Sheets, deploy a Google Apps Script in your spreadsheet.
+            </p>
+            <pre style="background:var(--bg-input); padding:var(--space-md); border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:0.75rem; overflow-x:auto; color:var(--text-secondary); max-height:220px;">
+// Google Apps Script Setup
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!isAuthorized(e)) return createJson("Unauthorized", 401);
+  var transactions = readSheet(ss.getSheetByName("Transactions"));
+  return createJson({ status: "success", transactions: transactions }, 200);
+}
 
-      </section><!-- /chart-section -->
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  if (!isAuthorized(e, data.accessKey)) return createJson("Unauthorized", 401);
+  if (data.action === "saveTransactions") {
+    writeTransactions(data.transactions);
+    return createJson({ status: "success" }, 200);
+  }
+}
+            </pre>
+            <p style="font-size:0.8rem; color:var(--text-tertiary); margin-top:var(--space-md);">
+              Create a spreadsheet with sheet named <strong>Transactions</strong> (columns: id, date, type, symbol, quantity, pricePerUnit, totalValue, notes, createdAt) and sheet <strong>Config</strong> with ACCESS_KEY row.
+            </p>
+          </div>
 
-      <!-- Footer -->
-      <footer class="footer">
-        <span class="footer__text">Data: CoinGecko · Yahoo Finance · Charts: TradingView Lightweight Charts</span>
-        <span class="footer__disclaimer">⚠️ For informational purposes only. Not financial advice. Always do your own research.</span>
-      </footer>
+        </div>
+      </section>
 
     </main>
 
+    <!-- ════════ BOTTOM NAVIGATION BAR ════════ -->
+    <nav class="bottom-nav">
+      <a href="#dashboard" class="bottom-nav__item active">
+        <span class="bottom-nav__icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#analysis" class="bottom-nav__item">
+        <span class="bottom-nav__icon">📈</span>
+        <span>Analysis</span>
+      </a>
+      <a href="#markets" class="bottom-nav__item">
+        <span class="bottom-nav__icon">🏛️</span>
+        <span>Markets</span>
+      </a>
+      <a href="#transactions" class="bottom-nav__item">
+        <span class="bottom-nav__icon">📝</span>
+        <span>Transactions</span>
+      </a>
+      <a href="#analytics" class="bottom-nav__item">
+        <span class="bottom-nav__icon">🎯</span>
+        <span>Analytics</span>
+      </a>
+      <a href="#settings" class="bottom-nav__item">
+        <span class="bottom-nav__icon">⚙️</span>
+        <span>Settings</span>
+      </a>
+    </nav>
+
   </div><!-- /app -->
+
+  <!-- Transaction Modal (CRUD) -->
+  <div class="modal" id="txn-modal">
+    <div class="modal__overlay" id="txn-modal-overlay"></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h3 class="modal__title" id="txn-modal-title">Add Transaction</h3>
+        <button class="modal__close" id="txn-modal-close">✕</button>
+      </div>
+      <div class="modal__body">
+        <form id="txn-form">
+          <input type="hidden" id="txn-id">
+
+          <div class="form-group">
+            <label>Transaction Type</label>
+            <div class="btn-toggle-group" id="txn-type-group">
+              <button type="button" class="btn-toggle active" data-type="buy">Buy</button>
+              <button type="button" class="btn-toggle" data-type="sell">Sell</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="txn-symbol">Asset Symbol</label>
+            <select class="form-control text-mono" id="txn-symbol" required style="font-weight: 600;">
+              <!-- Populated dynamically from ASSET_REGISTRY -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="txn-qty">Quantity</label>
+            <input type="number" class="form-control" id="txn-qty" step="any" min="0.000001" placeholder="0.0000" required>
+          </div>
+
+          <div class="form-group">
+            <label for="txn-price">Price per Unit</label>
+            <input type="number" class="form-control" id="txn-price" step="any" min="0.000001" placeholder="0.00" required>
+          </div>
+
+          <div class="form-group">
+            <label for="txn-date">Date</label>
+            <input type="date" class="form-control" id="txn-date" required>
+          </div>
+
+          <div class="form-group">
+            <label for="txn-notes">Notes (Optional)</label>
+            <input type="text" class="form-control" id="txn-notes" placeholder="e.g. DCA buy, monthly allocation">
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--secondary" id="txn-modal-cancel">Cancel</button>
+        <button type="submit" form="txn-form" class="btn btn--primary" id="txn-modal-save">Save</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Container -->
   <div class="toast-container" id="toast-container"></div>
 
   <!-- ════════ SCRIPTS ════════ -->
+  <!-- Chart.js v4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
   <!-- TradingView Lightweight Charts v4 -->
   <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 
@@ -206,8 +748,20 @@
   <script src="js/api.js"></script>
   <script src="js/indicators.js"></script>
   <script src="js/score.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/storage.js"></script>
   <script src="js/watchlist.js"></script>
   <script src="js/chart.js"></script>
+
+  <!-- Views -->
+  <script src="js/views/dashboard.js"></script>
+  <script src="js/views/analysis.js"></script>
+  <script src="js/views/markets.js"></script>
+  <script src="js/views/transactions.js"></script>
+  <script src="js/views/analytics.js"></script>
+  <script src="js/views/settings.js"></script>
+
+  <!-- Main Controller -->
   <script src="js/app.js"></script>
 
 </body>

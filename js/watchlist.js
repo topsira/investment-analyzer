@@ -1,6 +1,7 @@
 /**
- * Investment Analyzer — Watchlist Manager
- * Manages user's watchlist with localStorage persistence
+ * Investment Portfolio Manager — Watchlist Manager
+ * Manages user's watchlist with localStorage persistence.
+ * Renders as horizontal pills inside the Analysis tab.
  */
 
 const WatchlistManager = (() => {
@@ -11,16 +12,13 @@ const WatchlistManager = (() => {
   let activeSymbol = null;
   let containerEl = null;
   let onSelectCallback = null;
-  let onRemoveCallback = null;
 
   // ─── PERSISTENCE ──────────────────────────────────────────────────
-
   function load() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Validate that all symbols exist in registry
         watchlist = parsed.filter(sym => DataAPI.getAsset(sym));
       }
     } catch (e) {
@@ -37,20 +35,17 @@ const WatchlistManager = (() => {
   }
 
   // ─── INIT ─────────────────────────────────────────────────────────
-
   function init(container, onSelect) {
     containerEl = container;
     onSelectCallback = onSelect;
     load();
     render();
-    // Auto-select first item
     if (watchlist.length > 0) {
       setActive(watchlist[0]);
     }
   }
 
   // ─── OPERATIONS ───────────────────────────────────────────────────
-
   function add(symbol) {
     const sym = symbol.toUpperCase();
     if (!DataAPI.getAsset(sym)) return false;
@@ -58,6 +53,7 @@ const WatchlistManager = (() => {
     watchlist.push(sym);
     save();
     render();
+    updateAllWatchlistPrices();
     return true;
   }
 
@@ -66,9 +62,12 @@ const WatchlistManager = (() => {
     if (idx === -1) return false;
     watchlist.splice(idx, 1);
     save();
-    // If removed the active item, select next
+
+    // Select next active
     if (activeSymbol === symbol && watchlist.length > 0) {
       setActive(watchlist[Math.min(idx, watchlist.length - 1)]);
+    } else if (watchlist.length === 0) {
+      activeSymbol = null;
     }
     render();
     return true;
@@ -88,12 +87,22 @@ const WatchlistManager = (() => {
     if (onSelectCallback) onSelectCallback(symbol);
   }
 
+  function setActiveSymbolQuiet(symbol) {
+    activeSymbol = symbol;
+    render();
+  }
+
   function getActive() {
     return activeSymbol;
   }
 
-  // ─── RENDER ───────────────────────────────────────────────────────
+  function clearAll() {
+    watchlist = [...DEFAULT_WATCHLIST];
+    save();
+    render();
+  }
 
+  // ─── RENDER ───────────────────────────────────────────────────────
   function render() {
     if (!containerEl) return;
 
@@ -104,31 +113,28 @@ const WatchlistManager = (() => {
       if (!asset) return;
 
       const item = document.createElement('div');
-      item.className = `watchlist__item${symbol === activeSymbol ? ' active' : ''}`;
+      item.className = `watchlist-pill${symbol === activeSymbol ? ' active' : ''}`;
       item.setAttribute('data-symbol', symbol);
-      item.style.animationDelay = `${index * 50}ms`;
+      item.style.animationDelay = `${index * 30}ms`;
       item.classList.add('animate-slide-in');
 
       item.innerHTML = `
-        <div class="watchlist__item-info">
-          <span class="watchlist__item-symbol">${symbol}</span>
-          <span class="watchlist__item-name">${asset.name}</span>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <span class="watchlist-pill__symbol">${symbol}</span>
+          <span class="watchlist-pill__price" id="price-${symbol}">—</span>
         </div>
-        <div class="watchlist__item-data">
-          <span class="watchlist__item-price" id="price-${symbol}">—</span>
-          <span class="watchlist__item-change" id="change-${symbol}">—</span>
-        </div>
-        <button class="watchlist__item-remove" title="Remove ${symbol}" data-remove="${symbol}">✕</button>
+        <span class="watchlist-pill__change" id="change-${symbol}">—</span>
+        <button class="watchlist-pill__remove" title="Remove ${symbol}" data-remove="${symbol}">✕</button>
       `;
 
-      // Click to select
+      // Select row
       item.addEventListener('click', (e) => {
-        if (e.target.closest('.watchlist__item-remove')) return;
+        if (e.target.closest('.watchlist-pill__remove')) return;
         setActive(symbol);
       });
 
-      // Remove button
-      const removeBtn = item.querySelector('.watchlist__item-remove');
+      // Remove row
+      const removeBtn = item.querySelector('.watchlist-pill__remove');
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         remove(symbol);
@@ -138,22 +144,35 @@ const WatchlistManager = (() => {
     });
   }
 
-  // ─── UPDATE PRICES IN SIDEBAR ─────────────────────────────────────
-
+  // ─── UPDATE WATCHLIST PRICES ──────────────────────────────────────
   function updatePrice(symbol, price, change) {
     const priceEl = document.getElementById(`price-${symbol}`);
     const changeEl = document.getElementById(`change-${symbol}`);
     if (!priceEl || !changeEl) return;
 
-    // Format price
-    const formattedPrice = formatPrice(price);
-    priceEl.textContent = formattedPrice;
+    const asset = DataAPI.getAsset(symbol);
+    const curSymbol = (asset && asset.type === 'stock-th') ? '฿' : '$';
 
-    // Format change
+    priceEl.textContent = `${curSymbol}${formatPrice(price)}`;
+
     if (change !== null && change !== undefined) {
       const sign = change >= 0 ? '+' : '';
       changeEl.textContent = `${sign}${change.toFixed(2)}%`;
-      changeEl.className = `watchlist__item-change ${change >= 0 ? 'positive' : 'negative'}`;
+      changeEl.className = `watchlist-pill__change ${change >= 0 ? 'text-bullish' : 'text-bearish'}`;
+    }
+  }
+
+  async function updateAllWatchlistPrices() {
+    const symbols = getAll();
+    for (const symbol of symbols) {
+      try {
+        const data = await DataAPI.fetchAssetData(symbol, '1M');
+        if (data.market) {
+          updatePrice(symbol, data.market.price, data.market.change24h);
+        }
+      } catch (e) {
+        console.warn(`Watchlist price fetch failed for ${symbol}:`, e.message);
+      }
     }
   }
 
@@ -166,7 +185,6 @@ const WatchlistManager = (() => {
   }
 
   // ─── PUBLIC API ───────────────────────────────────────────────────
-
   return {
     init,
     add,
@@ -174,9 +192,12 @@ const WatchlistManager = (() => {
     has,
     getAll,
     setActive,
+    setActiveSymbolQuiet,
     getActive,
     updatePrice,
+    updateAllWatchlistPrices,
     formatPrice,
+    clearAll,
     render
   };
 })();
